@@ -100,7 +100,15 @@ Remove completed or cancelled tasks.
 
 ## Technical Details
 
-- **REST API Server**: [Endpoint: https://mcpclient.lovedoingthings.com/docs](https://mcpclient.lovedoingthings.com/docs)
+### Documentation
+
+- **REST API Documentation**:
+  - [FastAPI Docs](https://mcpclient.lovedoingthings.com/docs)
+  - [ReDoc](https://mcpclient.lovedoingthings.com/redoc#tag/Tasks/operation/create_task_api_tasks__post)
+- **MCP Server Documentation**: [https://task-mcp-server.aayushpokharel9029.workers.dev](https://task-mcp-server.aayushpokharel9029.workers.dev)
+
+### API Details
+
 - **Authentication**: API key via `X-API-Key` header
 - **Supported Priorities**: LOW, MEDIUM, HIGH, URGENT
 - **Supported Statuses**: TODO, IN_PROGRESS, DONE, CANCELLED
