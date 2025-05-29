@@ -6,7 +6,11 @@ https://apps.apple.com/app/apple-store/id6746345658
 
 # Task Management MCP Server
 
-PyPI version Python License: MIT
+[![Auto Release](https://github.com/Aayush9029/mcp-server/actions/workflows/auto-release.yml/badge.svg)](https://github.com/Aayush9029/mcp-server/actions/workflows/auto-release.yml)
+[![pages-build-deployment](https://github.com/Aayush9029/mcp-server/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/Aayush9029/mcp-server/actions/workflows/pages/pages-build-deployment)
+[![PyPI version](https://badge.fury.io/py/mcp-server.svg)](https://badge.fury.io/py/mcp-server)
+[![Python](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ![mcp](https://github.com/user-attachments/assets/d8810bcc-d5a0-40ba-b57d-af19b9045322)
 
