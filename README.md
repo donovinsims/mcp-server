@@ -1,276 +1,124 @@
+# Note
+
+App is in review process, it will be released here for free
+
+https://apps.apple.com/app/apple-store/id6746345658
+
 # Task Management MCP Server
 
-[![PyPI version](https://badge.fury.io/py/task-mcp.svg)](https://badge.fury.io/py/task-mcp)
-[![Python](https://img.shields.io/pypi/pyversions/task-mcp.svg)](https://pypi.org/project/task-mcp/)
-[![Test](https://github.com/Aayush9029/mcp-server/actions/workflows/test.yml/badge.svg)](https://github.com/Aayush9029/mcp-server/actions/workflows/test.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![GitHub](https://img.shields.io/github/stars/Aayush9029/mcp-server?style=social)](https://github.com/Aayush9029/mcp-server)
+PyPI version Python License: MIT
 
-A Model Context Protocol (MCP) server that provides LLMs with tools to manage tasks through a secure REST API. Built with FastMCP for seamless integration with Claude Desktop, Cursor, and other MCP clients.
+![mcp](https://github.com/user-attachments/assets/d8810bcc-d5a0-40ba-b57d-af19b9045322)
 
-## What is this?
+## Task Management MCP Server
 
-This MCP server acts as a bridge between AI assistants and a task management API, enabling them to:
-- ✅ Create, read, update, and delete tasks
-- 🎯 Set priorities (LOW, MEDIUM, HIGH, URGENT) and track status (TODO, IN_PROGRESS, DONE, CANCELLED)
-- 🔔 Manage task notifications
-- 🔐 Maintain secure, isolated task lists via API key authentication
+Bridge AI assistants with real-world task management
 
-The server wraps around a FastAPI backend at `https://mcpclient.lovedoingthings.com` and exposes task management capabilities through the MCP protocol.
+This MCP server connects Claude Desktop, Cursor, and other AI tools to a powerful task management API, enabling intelligent workflows that create, update, and track tasks automatically on your iPhone.
 
-## Installation
+### What You Can Do
 
-### Quick Start with uvx (Recommended - No installation needed!)
+- Ask Claude to create tasks during coding sessions
+- Let Cursor update task status as it completes work
+- Get notifications on your iPhone when AI assistants finish tasks
+- Track progress across multiple AI tools and automation scripts
+- Manage priorities with AI-suggested urgency levels
 
-```bash
-# Run directly with API key from environment
-TASK_API_KEY=your_api_key uvx task-mcp
+Perfect for developers who want their AI assistants to collaborate on real projects with automatic task tracking and mobile notifications.
 
-# Or pass API key as argument
-uvx task-mcp --api-key YOUR_API_KEY
+## Quick Start
 
-# View help
-uvx task-mcp -h
-```
+### 1. Get Your API Key
 
-### Other Installation Methods
+Download the iOS app [here](https://apps.apple.com/app/apple-store/id6746345658)
 
-<details>
-<summary>Via pip</summary>
+### 2. Choose Your Setup
 
-```bash
-pip install task-mcp
-```
-</details>
+#### For Claude Desktop (Recommended)
 
-<details>
-<summary>Via uv</summary>
-
-```bash
-uv add task-mcp
-```
-</details>
-
-<details>
-<summary>Via pipx</summary>
-
-```bash
-pipx install task-mcp
-```
-</details>
-
-<details>
-<summary>From source</summary>
-
-```bash
-git clone https://github.com/Aayush9029/mcp-server
-cd mcp-server
-uv sync
-```
-</details>
-
-## Getting Started
-
-### 1. Get an API Key
-
-Contact the API provider to get your `TASK_API_KEY` for the task management service.
-
-### 2. Configure Your MCP Client
-
-#### For Claude Desktop
-
-Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+Add this to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 ```json
 {
   "mcpServers": {
     "task-manager": {
-      "command": "uvx",
-      "args": ["task-mcp"],
-      "env": {
-        "TASK_API_KEY": "your_api_key_here"
-      }
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "https://task-mcp-server.aayushpokharel9029.workers.dev/sse?apiKey=YOUR_API_KEY"
+      ]
     }
   }
 }
 ```
 
-#### For Cursor or other MCP clients
+#### For Cursor or Other MCP Clients
 
 ```json
 {
   "mcpServers": {
     "task-manager": {
-      "command": "python",
-      "args": ["-m", "task_mcp"],
-      "env": {
-        "TASK_API_KEY": "your_api_key_here"
-      }
+      "url": "https://task-mcp-server.aayushpokharel9029.workers.dev/sse?apiKey=YOUR_API_KEY"
     }
   }
 }
 ```
 
-### 3. Start Using It!
+Replace `YOUR_API_KEY` with your actual API key.
 
-Once configured, you can ask your AI assistant to:
+### 3. Start Using It
+
+Once configured, your AI assistant can:
+
 - "Create a high-priority task to review the pull request"
-- "Show me all my pending tasks"
-- "Mark task 123 as completed"
-- "Update the project planning task to urgent priority"
-- "Delete all cancelled tasks"
+- "Show me all pending tasks"
+- "Mark the deployment task as completed"
+- "Update the bug fix to urgent priority"
 
 ## Available Tools
 
-### 📝 `create_task`
-Create a new task with title, description, priority, and notification settings.
+The server provides these capabilities to AI assistants:
 
-**Parameters:**
-- `title` (required): Task title
-- `description`: Detailed description (optional)
-- `priority`: LOW, MEDIUM, HIGH, or URGENT (default: MEDIUM)
-- `notify`: Enable notifications (default: true)
+### `create_task`
+Create new tasks with title, description, priority, and notification settings.
 
-### 📋 `list_tasks`
-List all your tasks with optional filtering.
+### `list_tasks`
+View all tasks with optional filtering by status, priority, or date.
 
-**Parameters:**
-- `status`: Filter by TODO, IN_PROGRESS, DONE, or CANCELLED
-- `priority`: Filter by LOW, MEDIUM, HIGH, or URGENT
-- `limit`: Max results 1-100 (default: 20)
-- `offset`: Skip tasks for pagination (default: 0)
+### `get_task`
+Get detailed information about any specific task.
 
-### 🔍 `get_task`
-Get detailed information about a specific task.
+### `update_task`
+Modify task properties including status, priority, and description.
 
-**Parameters:**
-- `task_id` (required): The task's unique identifier
+### `delete_task`
+Remove completed or cancelled tasks.
 
-### ✏️ `update_task`
-Update any property of an existing task.
+## Technical Details
 
-**Parameters:**
-- `task_id` (required): The task to update
-- `title`: New title
-- `description`: New description
-- `status`: New status
-- `priority`: New priority
-- `notify`: Update notification preference
+- **REST API Server**: [Endpoint: https://mcpclient.lovedoingthings.com/docs](https://mcpclient.lovedoingthings.com/docs)
+- **Authentication**: API key via `X-API-Key` header
+- **Supported Priorities**: LOW, MEDIUM, HIGH, URGENT
+- **Supported Statuses**: TODO, IN_PROGRESS, DONE, CANCELLED
 
-### 🗑️ `delete_task`
-Permanently delete a task.
+## Security & Privacy
 
-**Parameters:**
-- `task_id` (required): The task to delete
+- **API Key Isolation**: Each key maintains completely separate task data
+- **No Cross-Access**: Tasks are never shared between different API keys
+- **Secure Communication**: All requests require authentication headers
+- **Real-time Updates**: Changes sync instantly to your iPhone app
 
-## Development
+## Need Help?
 
-### Setting up for development
+If your AI assistant isn't connecting:
 
-```bash
-# Clone the repo
-git clone https://github.com/Aayush9029/mcp-server
-cd mcp-server
+1. Check that your API key is correctly formatted
+2. Verify the configuration file location
+3. Restart your MCP client after configuration changes
 
-# Install dependencies
-uv sync
+For issues or feature requests, visit the [GitHub repository](https://github.com/Aayush9029/mcp-server).
 
-# Run the server
-uv run task-mcp --api-key YOUR_API_KEY
-```
+---
 
-### Running tests
-
-```bash
-# Run all tests
-uv run pytest
-
-# With coverage
-uv run pytest --cov=. --cov-report=html
-
-# Run specific test
-uv run pytest tests/test_server.py
-```
-
-### Code quality
-
-```bash
-# Format code
-uv run black .
-
-# Sort imports
-uv run isort .
-
-# Type checking
-uv run mypy .
-
-# Linting
-uv run ruff check .
-```
-
-## Building Standalone Binaries
-
-You can create platform-specific executables:
-
-```bash
-# Install PyInstaller
-uv pip install pyinstaller
-
-# Build binary
-uv run python build_binary.py
-
-# Run the binary
-./dist/task-mcp-darwin-x86_64 --api-key YOUR_API_KEY
-```
-
-## API Details
-
-### Base URL
-The server connects to: `https://mcpclient.lovedoingthings.com/api`
-
-### Authentication
-All requests require an API key passed via the `X-API-Key` header. Tasks are isolated per API key - you can only see and modify your own tasks.
-
-### Task Structure
-```python
-{
-    "id": "uuid",                  # Unique identifier
-    "title": "string",             # Task title
-    "description": "string",       # Task description
-    "status": "TODO",              # TODO, IN_PROGRESS, DONE, CANCELLED
-    "priority": "MEDIUM",          # LOW, MEDIUM, HIGH, URGENT
-    "notify": true,                # Notification preference
-    "created_by": "api_key_hash",  # Owner identifier
-    "created_at": 1234567890.0,    # Unix timestamp
-    "last_updated_at": 1234567890.0 # Unix timestamp
-}
-```
-
-## Security
-
-- 🔐 **API Key Authentication**: All operations require a valid API key
-- 🔒 **Data Isolation**: Tasks are strictly scoped to their creating API key
-- ✅ **Input Validation**: Comprehensive validation using Pydantic models
-- 🛡️ **Error Handling**: Safe error messages that don't leak sensitive data
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Author
-
-Created by [Aayush Pokharel](https://aayush.art)
-- GitHub: [@Aayush9029](https://github.com/Aayush9029)
-- Twitter: [@aayushbuilds](https://x.com/aayushbuilds)
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m '✨ Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/Aayush9029/mcp-server).
+Built by **Aayush Pokharel**  
+GitHub: [@Aayush9029](https://github.com/Aayush9029) • Twitter: [@aayushbuilds](https://twitter.com/aayushbuilds)
