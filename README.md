@@ -1,11 +1,8 @@
 > [!NOTE]  
-> App is in review process, it will be released here
+> iOS app can be downloaded here
 >
 >  https://apps.apple.com/app/apple-store/id6746345658
->
-> Public Beta avialable here
->
-> https://testflight.apple.com/join/E39P1hzw
+
 
 # MCP Client for iOS
 
