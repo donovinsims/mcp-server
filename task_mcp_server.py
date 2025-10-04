@@ -132,6 +132,58 @@ def get_headers() -> dict[str, str]:
     return {"Content-Type": "application/json", "X-API-Key": task_settings.api_key}
 
 
+def extract_error_detail(response: httpx.Response) -> str:
+    """Extract a human readable error message from an HTTP response."""
+
+    try:
+        data = response.json()
+    except ValueError:
+        text = response.text.strip()
+        return text or "No additional error details were provided."
+
+    if isinstance(data, dict):
+        for key in ("detail", "message", "error"):
+            if key in data and isinstance(data[key], str):
+                return data[key]
+
+    return str(data)
+
+
+def send_request(
+    method: str,
+    path: str,
+    *,
+    params: Optional[dict[str, str]] = None,
+    json: Optional[dict[str, object]] = None,
+) -> httpx.Response:
+    """Send a request to the Task API with consistent error handling."""
+
+    url = f"{task_settings.api_base_url}{path}"
+
+    try:
+        with httpx.Client() as client:
+            response = client.request(
+                method,
+                url,
+                headers=get_headers(),
+                params=params,
+                json=json,
+                timeout=30.0,
+            )
+            response.raise_for_status()
+            return response
+    except httpx.HTTPStatusError as exc:
+        detail = extract_error_detail(exc.response)
+        reason = exc.response.reason_phrase or "Unknown reason"
+        raise RuntimeError(
+            f"Task API returned {exc.response.status_code} {reason}: {detail}"
+        ) from exc
+    except httpx.RequestError as exc:
+        raise RuntimeError(
+            "Failed to communicate with the Task API. Please check your network connection or try again."
+        ) from exc
+
+
 def format_task_display(task: TaskResponse) -> str:
     """Format a task for display with readable timestamps."""
     created = datetime.fromtimestamp(task.created_at).strftime("%Y-%m-%d %H:%M")
@@ -184,16 +236,17 @@ def create_task(
         notify=notify,
     )
 
-    with httpx.Client() as client:
-        response = client.post(
-            f"{task_settings.api_base_url}/tasks/",
+    try:
+        response = send_request(
+            "POST",
+            "/tasks/",
             json=task_data.model_dump(exclude_none=True),
-            headers=get_headers(),
         )
-        response.raise_for_status()
+    except RuntimeError as exc:
+        return f"Failed to create task: {exc}"
 
-        task = TaskResponse(**response.json())
-        return f"Created task '{task.title}' with ID: {task.id}\n\n{format_task_display(task)}"
+    task = TaskResponse(**response.json())
+    return f"Created task '{task.title}' with ID: {task.id}\n\n{format_task_display(task)}"
 
 
 @mcp.tool(
@@ -215,7 +268,7 @@ def list_tasks(
 
     You can filter tasks by status and priority, and control pagination with limit and offset.
     """
-    params = {}
+    params: dict[str, str] = {}
     if status:
         params["status"] = status.value
     if priority:
@@ -223,31 +276,30 @@ def list_tasks(
     params["limit"] = str(limit)
     params["offset"] = str(offset)
 
-    with httpx.Client() as client:
-        response = client.get(
-            f"{task_settings.api_base_url}/tasks/", params=params, headers=get_headers()
-        )
-        response.raise_for_status()
+    try:
+        response = send_request("GET", "/tasks/", params=params)
+    except RuntimeError as exc:
+        return f"Failed to list tasks: {exc}"
 
-        task_list = TaskListResponse(**response.json())
+    task_list = TaskListResponse(**response.json())
 
-        if not task_list.tasks:
-            return "No tasks found."
+    if not task_list.tasks:
+        return "No tasks found."
 
-        result = [f"Found {task_list.total} task(s):"]
-        result.append("=" * 50)
+    result = [f"Found {task_list.total} task(s):"]
+    result.append("=" * 50)
 
-        for i, task in enumerate(task_list.tasks, 1):
-            result.append(f"\n{i}. [{task.id}] **{task.title}**")
-            result.append(f"   Status: {task.status} | Priority: {task.priority}")
+    for i, task in enumerate(task_list.tasks, 1):
+        result.append(f"\n{i}. [{task.id}] **{task.title}**")
+        result.append(f"   Status: {task.status} | Priority: {task.priority}")
 
-            if task.description:
-                result.append(f"   {task.description}")
+        if task.description:
+            result.append(f"   {task.description}")
 
-            if task.notify:
-                result.append("   Notifications enabled")
+        if task.notify:
+            result.append("   Notifications enabled")
 
-        return "\n".join(result)
+    return "\n".join(result)
 
 
 @mcp.tool(
@@ -262,14 +314,13 @@ def get_task(
 
     You can only access tasks created with your API key.
     """
-    with httpx.Client() as client:
-        response = client.get(
-            f"{task_settings.api_base_url}/tasks/{task_id}", headers=get_headers()
-        )
-        response.raise_for_status()
+    try:
+        response = send_request("GET", f"/tasks/{task_id}")
+    except RuntimeError as exc:
+        return f"Failed to retrieve task: {exc}"
 
-        task = TaskResponse(**response.json())
-        return format_task_display(task)
+    task = TaskResponse(**response.json())
+    return format_task_display(task)
 
 
 @mcp.tool(
@@ -297,16 +348,17 @@ def update_task(
         notify=notify,
     )
 
-    with httpx.Client() as client:
-        response = client.put(
-            f"{task_settings.api_base_url}/tasks/{task_id}",
+    try:
+        response = send_request(
+            "PUT",
+            f"/tasks/{task_id}",
             json=update_data.model_dump(exclude_none=True),
-            headers=get_headers(),
         )
-        response.raise_for_status()
+    except RuntimeError as exc:
+        return f"Failed to update task: {exc}"
 
-        task = TaskResponse(**response.json())
-        return f"Updated task '{task.title}' (ID: {task.id})\n\n{format_task_display(task)}"
+    task = TaskResponse(**response.json())
+    return f"Updated task '{task.title}' (ID: {task.id})\n\n{format_task_display(task)}"
 
 
 @mcp.tool(name="delete_task", description="Delete a task permanently by its ID")
@@ -318,13 +370,12 @@ def delete_task(
 
     This action cannot be undone. You can only delete tasks created with your API key.
     """
-    with httpx.Client() as client:
-        response = client.delete(
-            f"{task_settings.api_base_url}/tasks/{task_id}", headers=get_headers()
-        )
-        response.raise_for_status()
+    try:
+        send_request("DELETE", f"/tasks/{task_id}")
+    except RuntimeError as exc:
+        return f"Failed to delete task: {exc}"
 
-        return f"Successfully deleted task with ID: {task_id}"
+    return f"Successfully deleted task with ID: {task_id}"
 
 
 if __name__ == "__main__":
